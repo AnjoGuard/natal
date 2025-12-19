@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jantar comigo?</title>
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1638;
+      --card: rgba(255,255,255,.08);
+      --txt: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --accent:#7dd3fc; --accent2:#a78bfa;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--txt);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 900px at 20% 15%, rgba(167,139,250,.18), transparent 55%),
+        radial-gradient(900px 700px at 85% 30%, rgba(125,211,252,.16), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+    .stars{
+      position:fixed; inset:0; pointer-events:none; opacity:.7;
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.6), transparent 40%),
+        radial-gradient(1px 1px at 35% 70%, rgba(255,255,255,.55), transparent 35%),
+        radial-gradient(1.5px 1.5px at 70% 25%, rgba(255,255,255,.55), transparent 40%),
+        radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,.45), transparent 35%),
+        radial-gradient(1.8px 1.8px at 55% 45%, rgba(255,255,255,.5), transparent 40%);
+      animation: twinkle 6s ease-in-out infinite;
+    }
+    @keyframes twinkle{ 0%,100%{opacity:.55} 50%{opacity:.85} }
+
+    .wrap{
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 26px 16px 44px;
+      height: 100vh;
+      display:grid;
+      place-items:center;
+    }
+    .card{
+      width: min(720px, 96vw);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(600px 240px at 20% 15%, rgba(125,211,252,.22), transparent 45%),
+        radial-gradient(600px 240px at 90% 30%, rgba(167,139,250,.22), transparent 45%);
+      opacity:.55; pointer-events:none;
+    }
+    .inner{ position:relative; padding: 22px 18px 18px; }
+    h1{ margin: 0 0 6px; font-size: 28px; letter-spacing:.2px; }
+    p{ margin:0 0 16px; color: var(--muted); line-height:1.35; }
+
+    .arena{
+      position:relative;
+      height: 48vh;
+      min-height: 320px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      overflow:hidden;
+    }
+
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      color: var(--txt);
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      transition: transform .12s ease, filter .12s ease;
+      min-width: 140px;
+    }
+    .btn:active{ transform: translateY(0px) scale(.99); filter: brightness(.98); }
+
+    .yes{
+      background: linear-gradient(135deg, rgba(52,211,153,.28), rgba(125,211,252,.18));
+      position:absolute;
+      left: 10%;
+      bottom: 12%;
+    }
+    .no{
+      background: linear-gradient(135deg, rgba(167,139,250,.22), rgba(125,211,252,.22));
+      position:absolute;
+      right: 10%;
+      bottom: 12%;
+    }
+
+    .toast{
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      display:none;
+    }
+    .toast.on{ display:block; }
+    .toast b{ display:block; margin-bottom: 6px; }
+    .toast span{ color: rgba(255,255,255,.75); }
+
+    .tiny{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,.55);
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="inner">
+        <h1>C*zinho hj?🍽️✨</h1>
+        <p>Escolhe com calma… (ou não 😈)</p>
+
+        <div class="arena" id="arena">
+          <button class="btn yes" id="yesBtn">Sim</button>
+          <button class="btn no" id="noBtn">Não</button>
+        </div>
+
+        <div class="toast" id="toast">
+          <b>Combinado.</b>
+          <span>na sua casa às 00:00</span>
+        </div> 
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const arena = document.getElementById("arena");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const toast = document.getElementById("toast");
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function moveNo(){
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      // área útil pra não sair pra fora
+      const maxX = a.width - b.width - 8;
+      const maxY = a.height - b.height - 8;
+
+      // posição aleatória
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+
+      noBtn.style.left = clamp(x, 6, maxX) + "px";
+      noBtn.style.top  = clamp(y, 6, maxY) + "px";
+      noBtn.style.right = "auto";
+      noBtn.style.bottom = "auto";
+
+      // micro “sumir e aparecer”
+      noBtn.style.opacity = "0";
+      setTimeout(()=>{ noBtn.style.opacity = "1"; }, 80);
+    }
+
+    // Desktop: foge no hover
+    noBtn.addEventListener("mouseenter", moveNo);
+
+    // Mobile: foge ao tocar
+    noBtn.addEventListener("touchstart", (e)=>{
+      e.preventDefault();
+      moveNo();
+    }, {passive:false});
+
+    // Se insistir e clicar (improvável), ele também foge
+    noBtn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      moveNo();
+    });
+
+    yesBtn.addEventListener("click", ()=>{
+      toast.classList.add("on");
+      // opcional: travar os botões depois do sim
+      noBtn.disabled = true;
+      yesBtn.disabled = true;
+      yesBtn.style.filter = "brightness(1.1)";
+      noBtn.style.filter = "brightness(.95)";
+    });
+
+    // Posiciona o "Não" em um lugar inicial mais “normal”
+    // (e garante que em telas pequenas ele ainda caiba)
+    window.addEventListener("load", ()=> {
+      // deixa como está primeiro, depois começa a bagunça quando interagir
+    });
+  </script>
+</body>
+</html>
