@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Caça ao Tesouro ✨</title>
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1638;
+      --card: rgba(255,255,255,.08);
+      --txt: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --accent:#7dd3fc; --accent2:#a78bfa;
+      --ok:#34d399; --bad:#fb7185;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--txt);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:
+        radial-gradient(1200px 900px at 20% 15%, rgba(167,139,250,.18), transparent 55%),
+        radial-gradient(900px 700px at 85% 30%, rgba(125,211,252,.16), transparent 55%),
+        radial-gradient(900px 900px at 55% 90%, rgba(52,211,153,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+    .stars{
+      position:fixed; inset:0; pointer-events:none;
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.6), transparent 40%),
+        radial-gradient(1px 1px at 35% 70%, rgba(255,255,255,.55), transparent 35%),
+        radial-gradient(1.5px 1.5px at 70% 25%, rgba(255,255,255,.55), transparent 40%),
+        radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,.45), transparent 35%),
+        radial-gradient(1.8px 1.8px at 55% 45%, rgba(255,255,255,.5), transparent 40%);
+      opacity:.7; animation: twinkle 6s ease-in-out infinite;
+    }
+    @keyframes twinkle{ 0%,100%{opacity:.55} 50%{opacity:.85} }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; margin-bottom: 18px;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 10px 14px; border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 40px rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+    }
+    .badge b{ letter-spacing:.5px; font-weight:800; }
+    .badge span{ color: var(--muted); font-size: 13px; }
+    .pill{
+      font-size: 12px; padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.75); white-space:nowrap;
+    }
+
+    .grid{ display:grid; grid-template-columns: 1fr; gap: 18px; }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden; position:relative;
+    }
+    .card::before{
+      content:""; position:absolute; inset:-2px;
+      background:
+        radial-gradient(600px 240px at 20% 15%, rgba(125,211,252,.22), transparent 45%),
+        radial-gradient(600px 240px at 90% 30%, rgba(167,139,250,.22), transparent 45%);
+      opacity:.55; pointer-events:none;
+    }
+    .inner{ position:relative; padding: 18px; }
+    .title{ font-size: 20px; margin: 0 0 6px 0; }
+    .subtitle{ margin:0 0 16px 0; color: var(--muted); line-height:1.4; font-size: 14px; }
+
+    .step{ display:flex; gap: 10px; align-items: stretch; margin-top: 8px; }
+    input{
+      width:100%; padding: 12px 14px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(10,20,40,.55);
+      color: var(--txt); outline:none; font-size: 15px;
+    }
+    input::placeholder{ color: rgba(255,255,255,.45) }
+    button{
+      padding: 12px 14px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, rgba(125,211,252,.28), rgba(167,139,250,.22));
+      color: var(--txt);
+      font-weight: 800; cursor:pointer;
+      transition: transform .12s ease, filter .12s ease;
+      min-width: 130px;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.08); }
+    button:active{ transform: translateY(0px); filter: brightness(.98); }
+
+    .msg{ margin-top:10px; font-size: 14px; color: var(--muted); min-height: 20px; }
+    .msg.ok{ color: var(--ok); }
+    .msg.bad{ color: var(--bad); }
+
+    .sectionTitle{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 12px 14px; border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 12px;
+    }
+    .sectionTitle small{ color: var(--muted); display:block; margin-top:2px; }
+
+    .reveal{ display:none; }
+    .reveal.on{ display:block; }
+
+    /* MAP FINAL */
+    .mapBox{
+      border-radius: 18px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 16px 55px rgba(0,0,0,.35);
+    }
+    .mapBox img{
+      width:100%;
+      display:block;
+      max-height: 560px;
+      object-fit: cover;
+    }
+    .hintBox{
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .hintBox b{ display:block; margin-bottom:6px; }
+    .hintBox p{ margin:0; color: var(--muted); line-height:1.45; }
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="badge">
+        <div style="font-size:18px">🎄</div>
+        <div>
+          <b>Caça ao Tesouro</b>
+          <span>um presente pra Júlia</span>
+        </div>
+      </div>
+      <div class="pill" id="progressPill">Etapa 1/3</div>
+    </header>
+
+    <!-- LOGIN CARD -->
+    <section class="card" id="cardLocks">
+      <div class="inner">
+        <h2 class="title">Duas portas. Um segredo.</h2>
+        <p class="subtitle">
+          Cada senha abre uma parte do caminho. Quando a última abrir…
+          você vai ver o mapa que leva ao segundo presente. 🌙☀️
+        </p>
+
+        <div class="sectionTitle">
+          <div>
+            <b>Porta 1</b>
+            <small>Digite a primeira senha</small>
+          </div>
+          <div class="pill" id="pill1">Fechada</div>
+        </div>
+
+        <div class="step">
+          <input id="pass1" inputmode="numeric" placeholder="Senha 1…" autocomplete="off" />
+          <button id="btn1">Abrir</button>
+        </div>
+        <div class="msg" id="msg1"></div>
+
+        <div class="sectionTitle" style="margin-top:14px;">
+          <div>
+            <b>Porta 2</b>
+            <small>Digite a segunda senha</small>
+          </div>
+          <div class="pill" id="pill2">Bloqueada</div>
+        </div>
+
+        <div class="step">
+          <input id="pass2" placeholder="Senha 2…" autocomplete="off" disabled />
+          <button id="btn2" disabled>Abrir</button>
+        </div>
+        <div class="msg" id="msg2"></div>
+      </div>
+    </section>
+
+    <!-- MAP REVEAL -->
+    <section class="card reveal" id="cardMap">
+      <div class="inner">
+        <h2 class="title">Aqui está o mapa.</h2>
+        <p class="subtitle">
+          Ele foi feito pra você. Segue as pistas com calma — o segundo presente tá te esperando. 💫
+        </p>
+
+        <div class="mapBox">
+          <!-- TROQUE o arquivo "mapa-final.jpg" pela imagem do mapa -->
+          <img src="mapa-final.jpg" alt="Mapa do caça-tesouro" />
+        </div>
+
+        <div class="hintBox">
+          <b>Regra do jogo</b>
+          <p>
+            Olha o mapa com atenção. O próximo passo está escondido nele.
+            Quando você encontrar, você vai saber exatamente o que fazer.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const progressPill = document.getElementById("progressPill");
+
+    const pass1 = document.getElementById("pass1");
+    const btn1 = document.getElementById("btn1");
+    const msg1 = document.getElementById("msg1");
+    const pill1 = document.getElementById("pill1");
+
+    const pass2 = document.getElementById("pass2");
+    const btn2 = document.getElementById("btn2");
+    const msg2 = document.getElementById("msg2");
+    const pill2 = document.getElementById("pill2");
+
+    const cardMap = document.getElementById("cardMap");
+
+    function cleanText(s){
+      return (s || "").trim().toLowerCase().replace(/\s+/g," ");
+    }
+
+    function ok(el, text){ el.className="msg ok"; el.textContent=text; }
+    function bad(el, text){ el.className="msg bad"; el.textContent=text; }
+    function neutral(el, text){ el.className="msg"; el.textContent=text || ""; }
+
+    function unlock2(){
+      pass2.disabled = false;
+      btn2.disabled = false;
+      pill2.textContent = "Fechada";
+      progressPill.textContent = "Etapa 2/3";
+      pass2.focus();
+    }
+
+    function revealMap(){
+      pill2.textContent = "Aberta ✅";
+      progressPill.textContent = "Etapa 3/3";
+      cardMap.classList.add("on");
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }
+
+    btn1.addEventListener("click", () => {
+      neutral(msg1);
+      const v = cleanText(pass1.value);
+      if(v === "7557"){
+        pill1.textContent = "Aberta ✅";
+        ok(msg1, "Porta 1 aberta. Agora a segunda…");
+        unlock2();
+      } else {
+        bad(msg1, "Senha incorreta. Tenta de novo 🙂");
+      }
+    });
+
+    btn2.addEventListener("click", () => {
+      neutral(msg2);
+      const v = cleanText(pass2.value);
+      if(v === "sol e lua"){
+        ok(msg2, "Perfeito. Pode continuar… ✨");
+        revealMap();
+      } else {
+        bad(msg2, "Ainda não. Pensa no que combina com vocês ☀️🌙");
+      }
+    });
+
+    pass1.addEventListener("keydown", (e)=>{ if(e.key==="Enter") btn1.click(); });
+    pass2.addEventListener("keydown", (e)=>{ if(e.key==="Enter") btn2.click(); });
+  </script>
+</body>
+</html>
